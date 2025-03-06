@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product List</title>
+</head>
+<body>
+    <h1>Products</h1>
+    <a href="{% url 'product_add' %}">Add Product</a>
+    <ul>
+        {% for product in products %}
+        <li>
+            {{ product.name }} - ₹{{ product.price }} (Stock: {{ product.stock }})
+            <a href="{% url 'product_update' product.pk %}">Update</a>
+            <a href="{% url 'product_delete' product.pk %}">Delete</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
