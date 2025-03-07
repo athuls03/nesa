@@ -1,19 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Product List</title>
+  <title>Product List</title>
 </head>
 <body>
-    <h1>Products</h1>
-    <a href="{% url 'product_add' %}">Add Product</a>
-    <ul>
-        {% for product in products %}
-        <li>
-            {{ product.name }} - ₹{{ product.price }} (Stock: {{ product.stock }})
-            <a href="{% url 'product_update' product.pk %}">Update</a>
-            <a href="{% url 'product_delete' product.pk %}">Delete</a>
-        </li>
-        {% endfor %}
-    </ul>
+  <h1>Products</h1>
+  <a href="#" onclick="addProduct(event)">Add Product</a>
+  <ul id="product-list">
+    {% for product in products %}
+    <li>
+      {{ product.name }} - ₹{{ product.price }} (Stock: {{ product.stock }})
+      <a href="#" onclick="updateProduct('{{ product.pk }}', event)">Update</a>
+      <a href="#" onclick="deleteProduct('{{ product.pk }}', event)">Delete</a>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <script>
+    const productList = document.getElementById('product-list');
+
+    function renderProducts(products) {
+      productList.innerHTML = '';
+      products.forEach(product => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          ${product.name} - ₹${product.price} (Stock: ${product.stock})
+          <a href="#" onclick="updateProduct('${product.id}', event)">Update</a>
+          <a href="#" onclick="deleteProduct('${product.id}', event)">Delete</a>
+        `;
+        productList.appendChild(li);
+      });
+    }
+
+    async function fetchProducts() {
+      const response = await fetch('/api/products/');
+      const products = await response.json();
+      renderProducts(products);
+    }
+
+    async function addProduct(event) {
+      event.preventDefault();
+
+      const name = prompt("Enter product name:");
+      const price = parseFloat(prompt("Enter product price:"));
+      const stock = parseInt(prompt("Enter product stock:"));
+
+      try {
+        const response = await fetch('/api/products/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, price, stock })
+        });
+
+        if (response.ok) {
+          fetchProducts();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.detail || 'Failed to add product'}`);
+        }
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    async function updateProduct(pk, event) {
+      event.preventDefault();
+
+      const name = prompt("Enter updated product name:");
+      const price = parseFloat(prompt("Enter updated product price:"));
+      const stock = parseInt(prompt("Enter updated product stock:"));
+
+      try {
+        const response = await fetch(`/api/products/${pk}/`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, price, stock })
+        });
+
+        if (response.ok) {
+          fetchProducts();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.detail || 'Failed to update product'}`);
+        }
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    async function deleteProduct(pk, event) {
+      event.preventDefault();
+      if (confirm("Are you sure you want to delete this product?")) {
+        try {
+          const response = await fetch(`/api/products/${pk}/`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            fetchProducts();
+          } else {
+            alert('Error: Failed to delete product');
+          }
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+        }
+      }
+    }
+
+    fetchProducts();
+  </script>
 </body>
 </html>
